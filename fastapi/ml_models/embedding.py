@@ -1,16 +1,16 @@
 from transformers import AutoTokenizer, AutoModel
 import torch
 
-class e5_embedding:
+class E5Embedding:
     def __init__(self):
         """
         HuggingFace 모델이랑 토크나이저 같은거 다 불러오자
         참고로 tokenizer은.. 문자를 모델의 입력으로 바꿔주는 도구래! 
         미리 학습되어있는거 불러오면 좋겠지?
         """
-        self.tokenizer = AutoTokenizer.from_pretrained("intfloat/e5-small") # model_name 넣어주면 알아서 불러와줌
-        self.model = AutoModel.from_pretrained("intfloat/e5-small").to(device)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.tokenizer = AutoTokenizer.from_pretrained("intfloat/e5-small") # model_name 넣어주면 알아서 불러와줌
+        self.model = AutoModel.from_pretrained("intfloat/e5-small")
 
     # 입력 텍스트 생성 (타이틀 + 설명 + 저자 등 결합)
     def build_text(self, row):
@@ -34,7 +34,10 @@ class e5_embedding:
 
         어차피 우린 제목, 저자, 출판사, 설명 정도만 있어서... SBERT나 OpenAI emb 같은거 굳이...
         """
-        self.model.eval()
+        self.model.to(self.device).eval()
+        # batch["text"]에 들어있는 리스트가 한 번에 처리할 문장 묶음이 됨
+        # 모델은 이 리스트 전체를 한 번에 GPU로 넣고 임베딩
+        # 출력은 len(batch["text"]) x 384 형태의 벡터
         batch_texts = [f"passage: {t}" for t in batch["text"]] # 각 텍스트 앞에 passage:를 붙힘!(e5 권장; 문맥 signal)
 
         inputs = self.tokenizer(
