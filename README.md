@@ -1,4 +1,5 @@
 # billbook-ml
+https://chatgpt.com/share/6914a234-fc4c-800c-9744-ddf3ba4d5f21
 
 ## 프로젝트 개요
 - 아 머라하지
