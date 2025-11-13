@@ -1,5 +1,6 @@
 from services import AladinBookFetchService, VectorDBService
 from ml_models import E5Embedding
+from config import ALADIN_KEY, PINECONE_KEY
 
 """
 ** 은 나중에 수정할거야 FT-Transformer(1)이나 SASRec(2)으로... 학습 잘 되면..
@@ -13,12 +14,10 @@ from ml_models import E5Embedding
 결론! 주피터 써서 학습 계속 하는것도 좋은데...
 일단 FastApi 써서 저런 로직들을 구성하자
 """
-
 if __name__ == "__main__":
-    TTB_KEY = "ttbseoll770145001"
-    aladin_service = AladinBookFetchService(ttb_key=TTB_KEY)
+    aladin_service = AladinBookFetchService(ttb_key=ALADIN_KEY)
     e5_service = E5Embedding()
-    vertor_db_service = VectorDBService()
+    pinecone_service = VectorDBService(api_key=PINECONE_KEY)
 
     # 책 불러오기
     bestsellers = aladin_service.fetch_books(query_type="Bestseller", max_results=50)
@@ -35,12 +34,13 @@ if __name__ == "__main__":
     embeddings = e5_service.embed_batch({"text": batch_texts})["embedding"]
 
     # 벡터DB에 넣기
-    records = []
-    for idx, emb in enumerate(embeddings):
-        records.append({
-            "id": book_ids[idx],
-            "embedding": emb,
-            "metadata": bestsellers[idx]  # 책 정보 그대로 넣기 가능
-        })
-
-    vertor_db_service.upsert_books(records)
+    records = {
+        "ids": book_ids,
+        "embs": embeddings,
+        "meta": bestsellers
+    }
+    pinecone_service.add_vectors(records['ids'], records['embs'], records['meta'])
+    
+    # 벡터DB에서 코사인 유사도로 꺼내기
+    test_emb = embeddings[0]
+    result = pinecone_service.query(test_emb, top_k = 5)
