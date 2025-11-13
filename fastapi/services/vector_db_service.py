@@ -1,18 +1,27 @@
-import pinecone
+from pinecone import Pinecone, ServerlessSpec
 
 class VectorDBService:
-    def __init__(self, api_key: str, environment: str = "us-west1-gcp", index_name: str = "books-index", dimension: int = 384):
+    def __init__(self, api_key: str, 
+                 index_name: str = "books-index", 
+                 dimension: int = 384):
         """
+        이 클래스로 말하자면,,, pinecone을 편하게 쓰기 위한 wrapper임!!
         Pinecone 초기화 및 인덱스 연결
         """
-        pinecone.init(api_key=api_key, environment=environment)
+        self.pc = Pinecone(api_key=api_key)
         self.index_name = index_name
 
         # 인덱스 없으면 생성
-        if index_name not in pinecone.list_indexes():
-            pinecone.create_index(name=index_name, dimension=dimension, metric="cosine")
-        
-        self.client = pinecone.Index(index_name)
+        if index_name not in self.pc.list_indexes().names():
+            self.pc.create_index(
+                name=index_name,
+                dimension=dimension,
+                metric="cosine",
+                spec=ServerlessSpec(cloud="aws", region="us-east-1")
+            )
+
+        # 인덱스 연결
+        self.client = self.pc.Index(index_name)
 
     def add_vectors(self, ids: list[str], embeddings: list[list[float]], metadata: list[dict]):
         """벡터와 메타데이터를 DB에 저장"""
