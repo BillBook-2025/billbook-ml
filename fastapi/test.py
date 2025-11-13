@@ -31,6 +31,7 @@ if __name__ == "__main__":
         text = e5_service.build_text(book)
         batch_texts.append(text)
         book_ids.append(book['isbn13']) # 고유 ID, DB에 key로 사용
+
     embeddings = e5_service.embed_batch({"text": batch_texts})["embedding"]
 
     # 벡터DB에 넣기
