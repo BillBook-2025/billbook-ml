@@ -47,19 +47,19 @@ if __name__ == "__main__":
     batch_texts = []
     book_ids = []
     for idx, book in enumerate(bestsellers, start=1):
-        print(f"{idx}. {book['title']} - {book['author']} ({book['publisher']})")
-        print(f"=> {book['category']}")
-        print(f"=> {book['description'][:100]}... \n")
         text = e5_service.build_text(book)
         batch_texts.append(text)
         book_ids.append(book['isbn13']) # 고유 ID, DB에 key로 사용
 
     embeddings = e5_service.embed_batch({"text": batch_texts})["embedding"]
 
-    # 벡터DB에 넣기
-    records = {
-        "ids": book_ids,
-        "embs": embeddings,
-        "meta": bestsellers
-    }
-    pinecone_service.add_vectors(records['ids'], records['embs'], records['meta'])
+    ids = book_ids
+    embs = embeddings
+    meta = bestsellers
+
+    pinecone_service.add_vectors(ids, embs, meta)
+
+    test_emb = e5_service.embed_query(user_query) # 수정된 함수 사용
+    results = pinecone_service.query(test_emb, top_k = 5)['matches']
+    for result in results:
+        print(result)

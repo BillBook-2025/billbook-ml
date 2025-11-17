@@ -4,33 +4,36 @@ from typing import List, Dict, Optional
 class AladinBookFetchService:
     BASE_URL = "https://www.aladin.co.kr/ttb/api/ItemList.aspx"
     LOOKUP_URL = "https://www.aladin.co.kr/ttb/api/ItemLookUp.aspx"
-
+    
     def __init__(self, ttb_key: str):
         self.ttb_key = ttb_key
 
+    """
+    알라딘 API를 호출해 인기책 / 베스트셀러 리스트를 가져옴
+    
+    :param query_type: API 호출 타입 (Bestseller, ItemNewAll, ItemNewSpecial, BlogBest 등)
+    :param max_results: 가져올 책 개수 (1~100)
+    :param category_id: 검색할 카테고리 ID. 0이면 전체. (예: 판타지 1101)
+    :param search_target: 검색 대상 (Book, Music, DVD 등)
+    :param output: 응답 포맷 (js, xml 등)
+    :param version: API 버전
+    :return: 책 정보 리스트
+    """
     def fetch_books(
         self,
         query_type: str = "Bestseller",
         max_results: int = 10,
         search_target: str = "Book",
+        category_id: int = 0,
         output: str = "js",
         version: str = "20131101"
     ) -> Optional[List[Dict]]:
-        """
-        알라딘 API를 호출해 인기책 / 베스트셀러 리스트를 가져옴
-        
-        :param query_type: API 호출 타입 (Bestseller, ItemNewAll, ItemNewSpecial, BlogBest 등)
-        :param max_results: 가져올 책 개수 (1~100)
-        :param search_target: 검색 대상 (Book, Music, DVD 등)
-        :param output: 응답 포맷 (js, xml 등)
-        :param version: API 버전
-        :return: 책 정보 리스트
-        """
         params = {
             "ttbkey": self.ttb_key,
             "QueryType": query_type,
             "MaxResults": max_results,
             "SearchTarget": search_target,
+            "CategoryId": category_id,
             "output": output,
             "Version": version,
         }
@@ -66,10 +69,10 @@ class AladinBookFetchService:
             print(f"❌ API 호출 오류: {e}")
             return None
 
+    """
+    알라딘 API를 통해 특정 도서의 상세 정보를 가져옴
+    """
     def fetch_book_detail(self, isbn13: str):
-        """
-        알라딘 API를 통해 특정 도서의 상세 정보를 가져옴
-        """
         params = {
             "ttbkey": self.ttb_key,
             "itemIdType": "ISBN13",
