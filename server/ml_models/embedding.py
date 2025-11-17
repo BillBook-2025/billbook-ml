@@ -8,7 +8,7 @@ class E5Embedding:
         참고로 tokenizer은.. 문자를 모델의 입력으로 바꿔주는 도구래! 
         미리 학습되어있는거 불러오면 좋겠지?
         """
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cpu" # "cuda" if torch.cuda.is_available() else "cpu"
         # self.tokenizer = AutoTokenizer.from_pretrained("intfloat/e5-small") # model_name 넣어주면 알아서 불러와줌
         # self.model = AutoModel.from_pretrained("intfloat/e5-small")
         self.tokenizer = AutoTokenizer.from_pretrained("intfloat/multilingual-e5-small")
