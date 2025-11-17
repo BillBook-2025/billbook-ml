@@ -1,17 +1,5 @@
 # billbook-ml
 https://chatgpt.com/share/6914a234-fc4c-800c-9744-ddf3ba4d5f21
-docker build -t billbook-fastapi .
-docker run -d -p 8000:8000 billbook-fastapi → 컨테이너 실행
-docker ps → 실행 확인
-docker stop <컨테이너ID> → 컨테이너 종료
-
-docker run -it --rm -p 8000:8000 billbook-fastapi /bin/bash
-cd server  # main.py 있는 폴더
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
-
-docker image prune -a
-docker builder prune
 
 ## 프로젝트 개요
 - 아 머라하지
@@ -63,14 +51,6 @@ python3 -m pip install fastapi torch uvicorn
 # 7. 패키지 버전 저장
 pip freeze > requirements.txt
 
-# 8. 도커 빌드
-docker build -t billbook-fastapi .
-
-# 9. 도커 허브에 push
-docker login
-docker tag billbook-fastapi goljeol/billbook-fastapi:latest
-docker push goljeol/billbook-fastapi:latest
-
 # 기타..
 pip install -r requirements.txt
 
@@ -79,3 +59,34 @@ docker run -d -p 8000:8000 goljeol/billbook-fastapi:latest
 
 code . (ctrl+shift+p 눌러서 Python: Select Interpreter 입력 후 venv 선택)
 jupyter notebook
+```
+
+### 도커 사용법
+```bash
+# 8. 도커 빌드
+docker build -t billbook-fastapi .
+
+# 9. 도커 허브에 push
+docker login
+docker tag billbook-fastapi goljeol/billbook-fastapi:latest
+docker push goljeol/billbook-fastapi:latest
+
+docker run -d -p 8000:8000 billbook-fastapi → 컨테이너 실행
+
+
+# docker run -d -p 8000:8000 billbook-fastapi
+# docker run -d -p 8001:8000 billbook-fastapi
+# docker run -d -p 8002:8000 billbook-fastapi
+# 일케 같은 이미지를 여러 도커에 킬 수도 있음
+docker logs -f 419b69c7a7dd
+
+docker ps → 실행 확인
+docker stop <컨테이너ID> → 컨테이너 종료
+
+# docker run -it --rm -p 8000:8000 billbook-fastapi /bin/bash
+# uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
+
+# 이건 도커 빌드하다가 생긴 캐쉬들 삭제하는...
+# docker image prune -a
+# docker builder prune
+```
