@@ -1,0 +1,14 @@
+venv/
+.venv/
+.DS_Store
+*.log
+.ipynb_checkpoints/
+.git/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+data/
+models/
+.env

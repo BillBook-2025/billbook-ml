@@ -23,11 +23,24 @@ class VectorDBService:
         # 인덱스 연결
         self.client = self.pc.Index(index_name)
 
+    def reset_index(self):
+        """ DB에 리셋 """
+        self.client.delete(delete_all=True)
+        print("Pinecone index has been reset!")
+    
     def add_vectors(self, ids: list[str], embeddings: list[list[float]], metadata: list[dict]):
-        """벡터와 메타데이터를 DB에 저장"""
-        vectors = [(i, e, m) for i, e, m in zip(ids, embeddings, metadata)]
+        """ 벡터와 메타데이터를 DB에 저장 """
+        vectors = [
+            {
+                "id": i,
+                "values": e,
+                "metadata": m
+            }
+            for i, e, m in zip(ids, embeddings, metadata)
+        ]
+        
         self.client.upsert(vectors=vectors)
 
     def query(self, embedding: list[float], top_k: int = 5):
-        """쿼리 벡터로 DB에서 유사 벡터 검색"""
+        """ 쿼리 벡터로 DB에서 유사 벡터 검색 """
         return self.client.query(vector=embedding, top_k=top_k, include_metadata=True)
