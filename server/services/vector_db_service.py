@@ -12,22 +12,37 @@ class VectorDBService:
         self.index_name = index_name
 
         # 인덱스 없으면 생성
-        if index_name not in self.pc.list_indexes().names():
+        existing_indexes = [idx["name"] for idx in self.pc.list_indexes()]
+
+        if index_name not in existing_indexes:
             self.pc.create_index(
                 name=index_name,
                 dimension=dimension,
                 metric="cosine",
-                spec=ServerlessSpec(cloud="aws", region="us-east-1")
+                spec=ServerlessSpec(cloud="aws", region="us-east-1"),
             )
 
         # 인덱스 연결
         self.client = self.pc.Index(index_name)
 
     def add_vectors(self, ids: list[str], embeddings: list[list[float]], metadata: list[dict]):
-        """벡터와 메타데이터를 DB에 저장"""
-        vectors = [(i, e, m) for i, e, m in zip(ids, embeddings, metadata)]
+        """
+        벡터 + 메타데이터 upsert
+        Pinecone v3 upsert 형식 준수
+        """
+        vectors = [
+            {"id": i, "values": e, "metadata": m}
+            for i, e, m in zip(ids, embeddings, metadata)
+        ]
+
         self.client.upsert(vectors=vectors)
 
     def query(self, embedding: list[float], top_k: int = 5):
-        """쿼리 벡터로 DB에서 유사 벡터 검색"""
-        return self.client.query(vector=embedding, top_k=top_k, include_metadata=True)
+        """
+        벡터 검색 (include_metadata=True)
+        """
+        return self.client.query(
+            vector=embedding,
+            top_k=top_k,
+            include_metadata=True,
+        )

@@ -1,8 +1,13 @@
 from fastapi import APIRouter
-from services import VectorDBService
-from ml_models import E5Embedding
-from models import BookSearchResponse
-from config import PINECONE_KEY
+from server.services import VectorDBService
+from server.ml_models import E5Embedding
+from server.models import BookSearchResponse
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+PINECONE_KEY = os.getenv("PINECONE_KEY")
 
 router = APIRouter()
 pinecone_service = VectorDBService(api_key=PINECONE_KEY)

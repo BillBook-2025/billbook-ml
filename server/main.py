@@ -1,10 +1,15 @@
 from fastapi import FastAPI
-from routers import popular
-from services import AladinBookFetchService, VectorDBService
-from ml_models import E5Embedding
-from config import ALADIN_KEY, PINECONE_KEY
+from server.routers import popular
+from server.services import AladinBookFetchService, VectorDBService
+from server.ml_models import E5Embedding
+from dotenv import load_dotenv
+import os
 
-""" uvicorn main:app --reload """
+load_dotenv()
+
+ALADIN_KEY = os.getenv("ALADIN_KEY")
+PINECONE_KEY = os.getenv("PINECONE_KEY")
+
 app = FastAPI(
     title="Book Search API",
     description="Pinecone + E5 Embedding 기반 책 검색 API",
@@ -12,7 +17,7 @@ app = FastAPI(
 )
 app.include_router(     # router를 등록하는데..
     popular.router,     # popular.py에 있는거 등록하고,
-    prefix="/api/ml"    # 해당 라우터의 모든 경로에 /api/ml을 붙임!
+    prefix="/ml"    # 해당 라우터의 모든 경로에 /api/ml을 붙임!
 )
 
 """ python main.py """
@@ -41,7 +46,10 @@ if __name__ == "__main__":
     # batch_texts = ["book A text", "book B text", "book C text"]
     batch_texts = []
     book_ids = []
-    for book in bestsellers:
+    for idx, book in enumerate(bestsellers, start=1):
+        print(f"{idx}. {book['title']} - {book['author']} ({book['publisher']})")
+        print(f"=> {book['category']}")
+        print(f"=> {book['description'][:100]}... \n")
         text = e5_service.build_text(book)
         batch_texts.append(text)
         book_ids.append(book['isbn13']) # 고유 ID, DB에 key로 사용

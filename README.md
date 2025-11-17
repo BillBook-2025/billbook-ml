@@ -1,5 +1,17 @@
 # billbook-ml
 https://chatgpt.com/share/6914a234-fc4c-800c-9744-ddf3ba4d5f21
+docker build -t billbook-fastapi .
+docker run -d -p 8000:8000 billbook-fastapi → 컨테이너 실행
+docker ps → 실행 확인
+docker stop <컨테이너ID> → 컨테이너 종료
+
+docker run -it --rm -p 8000:8000 billbook-fastapi /bin/bash
+cd server  # main.py 있는 폴더
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn server.main:app --reload --host 0.0.0.0 --port 8000
+
+docker image prune -a
+docker builder prune
 
 ## 프로젝트 개요
 - 아 머라하지
@@ -39,24 +51,31 @@ sudo apt install python3.10-venv
 # 4. 가상환경 생성
 python3 -m venv .venv
 
-# 5. 가상환경 활성화(나가는건 deactivate)
+# 5. 가상환경 활성화
 source .venv/bin/activate
+deactivate
 
-# 6. pip 업그레이드
+# 6. pip 업그레이드 및 필요한 패키지 설치
 python3 -m pip install --upgrade pip
-
-# 7. 필요한 패키지 설치
 python3 -m pip install fastapi torch uvicorn
 ...
 
-# 8. 패키지 버전 저장
+# 7. 패키지 버전 저장
 pip freeze > requirements.txt
 
-# 9. (다른 환경에서) 패키지 일괄 설치 (venv 활성화 상태)
+# 8. 도커 빌드
+docker build -t billbook-fastapi .
+
+# 9. 도커 허브에 push
+docker login
+docker tag billbook-fastapi goljeol/billbook-fastapi:latest
+docker push goljeol/billbook-fastapi:latest
+
+# 기타..
 pip install -r requirements.txt
 
-# 10. VSCode 실행
-code . (ctrl+shift+p 눌러서 Python: Select Interpreter 입력 후 venv 선택)
+docker pull goljeol/billbook-fastapi:latest
+docker run -d -p 8000:8000 goljeol/billbook-fastapi:latest
 
-# 11. Jupyter Notebook 실행
+code . (ctrl+shift+p 눌러서 Python: Select Interpreter 입력 후 venv 선택)
 jupyter notebook
