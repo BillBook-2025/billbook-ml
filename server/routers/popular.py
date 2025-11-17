@@ -15,9 +15,12 @@ e5_service = E5Embedding()
 
 @router.get("/search", response_model=BookSearchResponse)
 async def search_books(query: str):
-  index = pinecone_service.Index("books-index")
-  query_vector = e5_service.embed_batch({"text": query})[0]["embedding"]
-  res = index.query(query_vector, top_k = 5, include_metadata=True)
+  index = pinecone_service.client
+  query_vector = e5_service.embed_query(query)
+  res = index.query(
+    vector=query_vector, 
+    top_k=5, 
+    include_metadata=True)
 
   results = []
   for match in res['matches']:
