@@ -9,21 +9,34 @@ class E5Embedding:
         미리 학습되어있는거 불러오면 좋겠지?
         """
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.tokenizer = AutoTokenizer.from_pretrained("intfloat/e5-small") # model_name 넣어주면 알아서 불러와줌
-        self.model = AutoModel.from_pretrained("intfloat/e5-small")
+        # self.tokenizer = AutoTokenizer.from_pretrained("intfloat/e5-small") # model_name 넣어주면 알아서 불러와줌
+        # self.model = AutoModel.from_pretrained("intfloat/e5-small")
+        self.tokenizer = AutoTokenizer.from_pretrained("intfloat/multilingual-e5-small")
+        self.model = AutoModel.from_pretrained("intfloat/multilingual-e5-small")
 
     # 입력 텍스트 생성 (타이틀 + 설명 + 저자 등 결합)
     def build_text(self, row):
+        categories = ", ".join(row['category'])
         parts = [
-            f"Title: {row['title']}",
-            f"Author: {row['authors']}",
-            f"Publisher: {row['publisher']}",
-            f"Category: {row['category']}",
+            f"Title: {row['title']}\n",
+            f"Category: {categories}\n",
             f"Description: {row['description']}"
         ]
         return " ".join( # 리스트의 문자열들을 공백으로 연결할건데.....
             [p for p in parts if isinstance(p, str)] # NaN이나 None이 있으면 제외함
         ) # 최종적으로 하나의 문장 형태로 반환한다고 함!! "Title: ... Author: ... Publisher: ... Description: ..."
+
+        # title = row.get("title", "")
+        # desc = row.get("description", "")
+        
+        # # category는 리스트니까 자연어로 변환
+        # if isinstance(row.get("category"), list):
+        #     category = ", ".join(row["category"])
+        # else:
+        #     category = row.get("category", "")
+        
+        # # 자연어 문서로 변환
+        # return f"{title} 은(는) {category} 장르의 책으로, {desc}"
 
     def embed_batch(self, batch):
         """
@@ -35,9 +48,6 @@ class E5Embedding:
         어차피 우린 제목, 저자, 출판사, 설명 정도만 있어서... SBERT나 OpenAI emb 같은거 굳이...
         """
         self.model.to(self.device).eval()
-        # batch["text"]에 들어있는 리스트가 한 번에 처리할 문장 묶음이 됨
-        # 모델은 이 리스트 전체를 한 번에 GPU로 넣고 임베딩
-        # 출력은 len(batch["text"]) x 384 형태의 벡터
         batch_texts = [f"passage: {t}" for t in batch["text"]] # 각 텍스트 앞에 passage:를 붙힘!(e5 권장; 문맥 signal)
 
         inputs = self.tokenizer(
@@ -59,3 +69,23 @@ class E5Embedding:
         # .detach()를 통해서 그래프를 끊고 순수 값으로 탈바꿈 시킨대
         emb = emb.detach().cpu().numpy().tolist()
         return {"embedding": emb}
+
+    def embed_query(self, query_text: str):
+        # E5 모델의 쿼리 형식을 명시
+        self.model.to(self.device).eval()
+        formatted_query = f"query: {query_text}" 
+        
+        # embed_batch를 재활용하거나 새로 정의
+        # 여기서는 간단히 새로운 함수를 만들어서 query: 접두사를 붙여줍니다.
+        inputs = self.tokenizer(
+            [formatted_query], return_tensors="pt",  
+            truncation=True, padding=True, max_length=256
+        ).to(self.device)
+    
+        # (이하 기존 embed_batch의 임베딩 로직 동일)
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+            emb = outputs.last_hidden_state.mean(dim=1)
+            emb = torch.nn.functional.normalize(emb, p=2, dim=1)
+    
+        return emb.detach().cpu().numpy().tolist()[0]
